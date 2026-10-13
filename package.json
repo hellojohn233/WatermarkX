@@ -1,0 +1,36 @@
+{
+  "name": "watermarkx",
+  "version": "0.1.0",
+  "description": "AI-friendly CLI for batch watermarking existing images without regenerating them.",
+  "type": "module",
+  "bin": {
+    "watermarkx": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "watermark",
+    "image",
+    "cli",
+    "batch",
+    "ai-agent",
+    "sharp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "dependencies": {
+    "commander": "15.0.0",
+    "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.8.1",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}
