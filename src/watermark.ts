@@ -75,11 +75,15 @@ function textOverlaySvg(width: number, height: number, options: AddOptions): Buf
 function tiledTextOverlaySvg(width: number, height: number, options: AddOptions): Buffer {
   const text = escapeXml(options.text ?? "");
   const fontSize = options.fontSize;
-  const spacing = options.spacing;
+  const estimatedWidth = Math.max(Math.round((options.text ?? "").length * fontSize * 0.62), fontSize * 4);
+  const textHeight = Math.round(fontSize * 1.45);
+  const columnPitch = estimatedWidth + options.columnSpacing;
+  const rowPitch = textHeight + options.rowSpacing;
   const rows: string[] = [];
 
-  for (let y = -spacing; y < height + spacing; y += spacing) {
-    for (let x = -spacing; x < width + spacing; x += spacing) {
+  for (let row = 0, y = -rowPitch; y < height + rowPitch; row++, y += rowPitch) {
+    const stagger = row % 2 === 0 ? 0 : columnPitch / 2;
+    for (let x = -columnPitch + stagger; x < width + columnPitch; x += columnPitch) {
       rows.push(`
         <text
           x="${x}"
@@ -89,7 +93,7 @@ function tiledTextOverlaySvg(width: number, height: number, options: AddOptions)
           font-weight="700"
           fill="${options.color}"
           opacity="${options.opacity}"
-          transform="rotate(${options.rotate}, ${x}, ${y})"
+          transform="rotate(${options.rotate}, ${x + estimatedWidth / 2}, ${y - fontSize / 2})"
         >${text}</text>
       `);
     }

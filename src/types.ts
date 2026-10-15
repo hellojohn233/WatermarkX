@@ -21,6 +21,8 @@ export interface AddOptions {
   margin: number;
   rotate: number;
   spacing: number;
+  columnSpacing: number;
+  rowSpacing: number;
   recursive: boolean;
   overwrite: boolean;
   dryRun: boolean;

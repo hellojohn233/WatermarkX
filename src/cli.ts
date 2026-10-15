@@ -16,6 +16,14 @@ function parseNumber(value: string): number {
   return parsed;
 }
 
+function parseNonNegativeNumber(value: string): number {
+  const parsed = parseNumber(value);
+  if (parsed < 0) {
+    throw new InvalidArgumentError("Expected a number greater than or equal to 0");
+  }
+  return parsed;
+}
+
 function parseOpacity(value: string): number {
   const parsed = parseNumber(value);
   if (parsed < 0 || parsed > 1) {
@@ -67,8 +75,10 @@ function buildOptions(input: string, rawOptions: Record<string, unknown>): AddOp
     fontSize: rawOptions.fontSize as number,
     color: rawOptions.color as string,
     margin: rawOptions.margin as number,
-    rotate: rawOptions.rotate as number,
+    rotate: (rawOptions.rotate as number | undefined) ?? (mode === "tile" ? -30 : 0),
     spacing: rawOptions.spacing as number,
+    columnSpacing: (rawOptions.columnSpacing as number | undefined) ?? (rawOptions.spacing as number),
+    rowSpacing: (rawOptions.rowSpacing as number | undefined) ?? (rawOptions.spacing as number),
     recursive: Boolean(rawOptions.recursive),
     overwrite: Boolean(rawOptions.overwrite),
     dryRun: Boolean(rawOptions.dryRun),
@@ -194,8 +204,10 @@ program
   .option("--font-size <number>", "Text size in pixels for text, tile, and diagonal modes.", parseNumber, 48)
   .option("--color <css-color>", "Text color in any SVG/CSS color format, such as #ffffff or rgba(255,255,255,0.7).", "#ffffff")
   .option("--margin <number>", "Distance in pixels from the chosen edge for single watermarks.", parseNumber, 32)
-  .option("--rotate <number>", "Rotation angle in degrees. Useful for diagonal or branded text watermarks.", parseNumber, 0)
-  .option("--spacing <number>", "Distance in pixels between repeated text watermarks in tile mode.", parseNumber, 240)
+  .option("--rotate <number>", "Rotation angle in degrees. Tile mode defaults to -30; other modes default to 0.", parseNumber)
+  .option("--spacing <number>", "Legacy shorthand for both --column-spacing and --row-spacing.", parseNonNegativeNumber, 240)
+  .option("--column-spacing <number>", "Horizontal gap in pixels between tiled text groups. Overrides --spacing.", parseNonNegativeNumber)
+  .option("--row-spacing <number>", "Vertical gap in pixels between tiled rows. Overrides --spacing.", parseNonNegativeNumber)
   .option("--recursive", "When input is a directory, also process supported images in nested folders.", false)
   .option("--overwrite", "Replace output files if they already exist. Without this flag, existing outputs are skipped.", false)
   .option("--dry-run", "Show the files that would be processed without writing any images.", false)
@@ -210,7 +222,7 @@ Watermark sources:
 
 Modes:
   single    Draw one watermark at --position.
-  tile      Repeat text across the full image. Works with --text only.
+  tile      Repeat staggered, rotated text across the full image. Works with --text only.
   diagonal  Draw large centered text, usually with --rotate -30 or the default diagonal angle.
 
 Examples:
@@ -220,8 +232,8 @@ Examples:
   Add a logo watermark scaled to 18% of each image width:
     watermarkx add ./photos --logo ./logo.png --position bottom-right --scale 0.18 --opacity 0.5 --out ./out
 
-  Add a tiled confidential watermark:
-    watermarkx add ./photos --text "CONFIDENTIAL" --mode tile --rotate -30 --opacity 0.12 --spacing 240 --out ./out
+  Add a staggered, diagonal tiled watermark with independently controlled density:
+    watermarkx add ./photos --text "CONFIDENTIAL" --mode tile --opacity 0.12 --column-spacing 180 --row-spacing 100 --out ./out
 
   Preview work without writing files:
     watermarkx add ./photos --text "Demo" --out ./out --dry-run
